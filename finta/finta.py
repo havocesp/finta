@@ -1367,3 +1367,15 @@ class TA:
         aroon_up = map(lambda idx: aroon_calculator(idx, np.max) / period * 100, rng)
         aroon_dw = map(lambda idx: aroon_calculator(idx, np.min) / period * 100, rng)
         return pd.Series(aroon_up, name='AROON_UP'), pd.Series(aroon_dw, name='AROON_DOWN')
+
+
+    @classmethod
+    def RAVI(cls, ohlc, short=7, long=65):
+        """
+        Chande's Range Action Verification Index (RAVI) indicator
+
+        """
+        short_sma = cls.SMA(ohlc, period=short)
+        long_sma = cls.SMA(ohlc, period=long)
+        result = ((short_sma - long_sma) / long_sma) * 100.0
+        return pd.Series(result)

@@ -1293,3 +1293,24 @@ class TA:
                 zzprices.append(ohlc.low[zzdates[-1]])
 
         return pd.Series(zzprices, index=zzdates)
+
+
+    @classmethod
+    def PPSR(cls, ohlc):
+        """
+        Pivot Points, Supports and Resistances
+
+        :param ohlc: pandas dataframe with OHLCV data
+        :return: pandas Series with results
+        """
+        pp = pd.Series((ohlc['high'] + ohlc['low'] + ohlc['close']) / 3)
+        r1 = pd.Series(2 * pp - ohlc['low'])
+        s1 = pd.Series(2 * pp - ohlc['high'])
+        r2 = pd.Series(pp + ohlc['high'] - ohlc['low'])
+        s2 = pd.Series(pp - ohlc['high'] + ohlc['low'])
+        r3 = pd.Series(ohlc['high'] + 2 * (pp - ohlc['low']))
+        s3 = pd.Series(ohlc['low'] - 2 * (ohlc['high'] - pp))
+        psr = {'PP': pp, 'R1': r1, 'S1': s1, 'R2': r2, 'S2': s2, 'r3': r3, 'S3': s3}
+        psr = pd.DataFrame(psr)
+        ohlc = ohlc.join(psr)
+        return ohlc

@@ -1,9 +1,7 @@
-
 import pandas as pd
 
 
 class TA:
-
 
     @classmethod
     def SMA(cls, ohlc, period=41, column='close'):
@@ -503,7 +501,7 @@ class TA:
                 xpt0 = min(lmin, xpt1)
 
             if sig0 == sig1:
-                sari = _sar[-1] + (xpt1 - _sar[-1])*af1
+                sari = _sar[-1] + (xpt1 - _sar[-1]) * af1
                 af0 = min(amax, af1 + af)
 
                 if sig0:
@@ -519,7 +517,6 @@ class TA:
             _sar.append(sari)
 
         return pd.Series(_sar, index=ohlc.index)
-
 
 
     @classmethod
@@ -1219,6 +1216,7 @@ class TA:
 
         return pd.concat([upper_band, lower_band], axis=1)
 
+
     @classmethod
     def VR(cls, ohlc, periods=14):
         """
@@ -1227,6 +1225,7 @@ class TA:
         :return pd.Series: indicator calcs as pandas Series
         """
         import numpy as np
+
         vector_size = len(ohlc.close)
         high_low_diff = ohlc.high - ohlc.low
         high_close_diff = np.zeros(vector_size)
@@ -1239,6 +1238,60 @@ class TA:
         return vr
 
 
+    def ZIGZAG(cls, ohlc, percent=5):
+        # max and min percentages
+        max_per100 = 1 + percent / 100
+        min_per100 = 1 - percent / 100
+        # current index
+        last_date = ohlc.index[0]
+        # current close
+        last_price = ohlc.close[last_date]
+        trend = None
+
+        zzdates, zzprices = [last_date], [last_price]
+
+        for idx, current_max, current_min in zip(ohlc.index, ohlc.high, ohlc.low):
+            # No initial trend
+            if trend is None:
+                if current_max / last_price > max_per100:
+                    trend = 1
+                elif current_min / last_price < min_per100:
+                    trend = -1
+            # Trend is up
+            elif trend == 1:
+                # New high
+                if current_max > last_price:
+                    last_date, last_price = idx, current_max
+                # Reversal
+                elif current_min / last_price < min_per100:
+                    zzdates.append(last_date)
+                    zzprices.append(last_price)
+
+                    trend, last_date, last_price = -1, idx, current_min
+            # Trend is down
+            else:
+                # New low
+                if current_min < last_price:
+                    last_date, last_price = idx, current_min
+                # Reversal
+                elif current_max / last_price > max_per100:
+                    zzdates.append(last_date)
+                    zzprices.append(last_price)
+
+                    trend, last_date, last_price = 1, idx, current_max
+
+        # Extrapolate the current trend
+        if zzdates[-1] != ohlc.index[-1]:
+            zzdates.append(ohlc.index[-1])
+
+            if trend is None:
+                zzprices.append(ohlc.close[zzdates[-1]])
+            elif trend == 1:
+                zzprices.append(ohlc.high[zzdates[-1]])
+            else:
+                zzprices.append(ohlc.low[zzdates[-1]])
+
+        return pd.Series(zzprices, index=zzdates)
 
 if __name__ == '__main__':
     print([k for k in TA.__dict__.keys() if k[0] not in '_'])

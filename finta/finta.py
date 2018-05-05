@@ -1238,6 +1238,7 @@ class TA:
         return vr
 
 
+    @classmethod
     def ZIGZAG(cls, ohlc, percent=5):
         # max and min percentages
         max_per100 = 1 + percent / 100
@@ -1292,6 +1293,3 @@ class TA:
                 zzprices.append(ohlc.low[zzdates[-1]])
 
         return pd.Series(zzprices, index=zzdates)
-
-if __name__ == '__main__':
-    print([k for k in TA.__dict__.keys() if k[0] not in '_'])

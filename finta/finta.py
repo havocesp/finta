@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 
@@ -1158,9 +1159,6 @@ class TA:
 
         A signal line which is a previous value of itself is also calculated.
         """
-
-        import numpy as np
-
         med = (ohlc['high'] + ohlc['low']) / 2
         ndaylow = med.rolling(window=period).min()
         ndayhigh = med.rolling(window=period).max()
@@ -1224,8 +1222,6 @@ class TA:
         :param pd.DataFrame ohlc: 'open, high, low, close' pandas DataFrame
         :return pd.Series: indicator calcs as pandas Series
         """
-        import numpy as np
-
         vector_size = len(ohlc.close)
         high_low_diff = ohlc.high - ohlc.low
         high_close_diff = np.zeros(vector_size)
@@ -1314,3 +1310,29 @@ class TA:
         psr = pd.DataFrame(psr)
         ohlc = ohlc.join(psr)
         return ohlc
+
+
+    @classmethod
+    def EOM(cls, ohlc, period=10):
+        """
+        Ease of Movement
+        """
+        EoM = (ohlc['high'].diff(1) + ohlc['low'].diff(1)) * (ohlc['high'] - ohlc['low']) / (2 * ohlc['volume'])
+        Eom_ma = pd.Series(pd.rolling_mean(EoM, period), name='EoM_' + str(period))
+        return Eom_ma
+
+
+    @classmethod
+    def CMF(cls, ohlcv, period=20):
+        """
+        Chaiking Money Flow
+        """
+        o, h, l, c, v = ohlcv.open, ohlcv.high, ohlcv.low, ohlcv.close, ohlcv.volume
+        size = len(h)
+        money_flow_multiplier = ((c - l) - (h - c)).reshape((size, 1)) * np.linalg.pinv((h - l).reshape((size, 1)))
+        money_flow_volume = np.dot(money_flow_multiplier, v.reshape((size, 1)))
+        cmf = np.zeros(size)
+        cmf[:] = np.NAN
+        for i in range((period - 1), size):
+            cmf[i] = sum(money_flow_volume[i - period + 1:i + 1]) / sum(v[i - period + 1:i + 1])
+        return cmf

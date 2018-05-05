@@ -1325,7 +1325,7 @@ class TA:
     @classmethod
     def CMF(cls, ohlcv, period=20):
         """
-        Chaiking Money Flow
+        Chaikin Money Flow
         """
         o, h, l, c, v = ohlcv.open, ohlcv.high, ohlcv.low, ohlcv.close, ohlcv.volume
         size = len(h)
@@ -1336,3 +1336,16 @@ class TA:
         for i in range((period - 1), size):
             cmf[i] = sum(money_flow_volume[i - period + 1:i + 1]) / sum(v[i - period + 1:i + 1])
         return cmf
+
+
+    @classmethod
+    def FORCE(cls, ohlcv, period=13):
+        """
+        FORCE Indicator
+        """
+        size = len(ohlcv.close)
+        force = np.zeros(size)
+        force[0] = np.nan
+        force[1:] = (ohlcv.close[1:] - ohlcv.close[0:size - 1]) * ohlcv.volume[1:]
+        force[1:] = cls.EMA(force[1:], period)
+        return force

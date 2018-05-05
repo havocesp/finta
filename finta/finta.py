@@ -1325,7 +1325,7 @@ class TA:
     @classmethod
     def CMF(cls, ohlcv, period=20):
         """
-        Chaikin Money Flow
+        Chaikin Money Flow indictaor
         """
         o, h, l, c, v = ohlcv.open, ohlcv.high, ohlcv.low, ohlcv.close, ohlcv.volume
         size = len(h)
@@ -1341,7 +1341,7 @@ class TA:
     @classmethod
     def FORCE(cls, ohlcv, period=13):
         """
-        FORCE Indicator
+        FORCE indicator
         """
         size = len(ohlcv.close)
         force = np.zeros(size)
@@ -1349,3 +1349,21 @@ class TA:
         force[1:] = (ohlcv.close[1:] - ohlcv.close[0:size - 1]) * ohlcv.volume[1:]
         force[1:] = cls.EMA(force[1:], period)
         return force
+
+
+    @classmethod
+    def AROON(cls, ohlc, period=14):
+        """
+        Aroon indicator
+        """
+
+
+        def aroon_calculator(idx, fn):
+            array = fn(ohlc.close[idx + 1 - period:idx + 1])
+            return ((period - ohlc.close[idx + 1 - period:idx + 1].index(array)) / period) * 100
+
+
+        rng = range(period - 1, len(ohlc.close))
+        aroon_up = map(lambda idx: aroon_calculator(idx, np.max) / period * 100, rng)
+        aroon_dw = map(lambda idx: aroon_calculator(idx, np.min) / period * 100, rng)
+        return pd.Series(aroon_up, name='AROON_UP'), pd.Series(aroon_dw, name='AROON_DOWN')
